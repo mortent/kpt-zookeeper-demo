@@ -1,0 +1,27 @@
+apiVersion: kpt.dev/v1alpha1
+kind: Kptfile
+metadata:
+  name: zookeeper
+upstream:
+  type: git
+  git:
+    commit: 8e03eb2c6bc6e8871418544c70086785149ac398
+    repo: https://github.com/mortent/kpt-packages
+    directory: zookeeper
+    ref: v0.1.0
+packageMetadata:
+  shortDescription: sample description
+openAPI:
+  definitions:
+    io.k8s.cli.setters.namespace:
+      x-k8s-cli:
+        setter:
+          isSet: true
+          name: namespace
+          value: default
+    io.k8s.cli.setters.replicas:
+      x-k8s-cli:
+        setter:
+          isSet: true
+          name: replicas
+          value: "1"
