@@ -1,0 +1,10 @@
+apiVersion: policy/v1beta1
+kind: PodDisruptionBudget
+metadata:
+  name: zookeeper
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/component: zookeeper
+      app.kubernetes.io/name: zookeeper
+  minAvailable: 50%

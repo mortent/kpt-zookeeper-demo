@@ -5,3 +5,4 @@ bases:
 - statefulset.yaml
 - svc-headless.yaml
 - svc.yaml
+- pdb.yaml
