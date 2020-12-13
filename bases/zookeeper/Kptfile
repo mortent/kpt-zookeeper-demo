@@ -5,10 +5,10 @@ metadata:
 upstream:
   type: git
   git:
-    commit: f7a665930cb8ff5583835a6b2291fab16f7f2de9
+    commit: f542f03cd5b831f6521f2adc16c0e764667cf9a3
     repo: https://github.com/mortent/kpt-packages
     directory: zookeeper
-    ref: v0.1.0
+    ref: v0.2.0
 packageMetadata:
   shortDescription: sample description
 openAPI:
@@ -36,6 +36,6 @@ openAPI:
     io.k8s.cli.setters.replicas:
       x-k8s-cli:
         setter:
+          isSet: true
           name: replicas
           value: "1"
-          isSet: true
