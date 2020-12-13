@@ -1,0 +1,41 @@
+apiVersion: kpt.dev/v1alpha1
+kind: Kptfile
+metadata:
+  name: zookeeper
+upstream:
+  type: git
+  git:
+    commit: f7a665930cb8ff5583835a6b2291fab16f7f2de9
+    repo: https://github.com/mortent/kpt-packages
+    directory: zookeeper
+    ref: v0.1.0
+packageMetadata:
+  shortDescription: sample description
+openAPI:
+  definitions:
+    io.k8s.cli.setters.electionPort:
+      x-k8s-cli:
+        setter:
+          name: electionPort
+          value: "3888"
+    io.k8s.cli.setters.followerPort:
+      x-k8s-cli:
+        setter:
+          name: followerPort
+          value: "2888"
+    io.k8s.cli.setters.namespace:
+      x-k8s-cli:
+        setter:
+          name: namespace
+          value: default
+    io.k8s.cli.setters.port:
+      x-k8s-cli:
+        setter:
+          name: port
+          value: "2181"
+    io.k8s.cli.setters.replicas:
+      x-k8s-cli:
+        setter:
+          name: replicas
+          value: "1"
+          isSet: true

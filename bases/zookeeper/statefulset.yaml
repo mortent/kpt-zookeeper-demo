@@ -1,0 +1,133 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: zookeeper
+  namespace: default # {"$kpt-set":"namespace"}
+  labels:
+    app.kubernetes.io/component: zookeeper
+    app.kubernetes.io/name: zookeeper
+  annotations:
+    config.kubernetes.io/function: |
+      container:
+        image: gcr.io/mortent-dev-kube/zookeeper-fn:latest
+spec:
+  replicas: 1 # {"$kpt-set":"replicas"}
+  selector:
+    matchLabels:
+      app.kubernetes.io/component: zookeeper
+      app.kubernetes.io/name: zookeeper
+  template:
+    metadata:
+      name: zookeeper
+      labels:
+        app.kubernetes.io/component: zookeeper
+        app.kubernetes.io/name: zookeeper
+    spec:
+      containers:
+      - name: zookeeper
+        image: docker.io/bitnami/zookeeper:3.6.1-debian-10-r88
+        command:
+        - bash
+        - -ec
+        - |
+          # Execute entrypoint as usual after obtaining ZOO_SERVER_ID based on POD hostname
+          HOSTNAME=`hostname -s`
+          if [[ $HOSTNAME =~ (.*)-([0-9]+)$ ]]; then
+            ORD=${BASH_REMATCH[2]}
+            export ZOO_SERVER_ID=$((ORD+1))
+          else
+            echo "Failed to get index from hostname $HOST"
+            exit 1
+          fi
+          exec /entrypoint.sh /run.sh
+        ports:
+        - name: client
+          containerPort: 2181 # {"$kpt-set":"port"}
+        - name: follower
+          containerPort: 2888 # {"$kpt-set":"followerPort"}
+        - name: election
+          containerPort: 3888 # {"$kpt-set":"electionPort"}
+        env:
+        - name: ZOO_DATA_LOG_DIR
+          value: ""
+        - name: ZOO_PORT_NUMBER
+          value: "2181" # {"$kpt-set":"port"}
+        - name: ZOO_TICK_TIME
+          value: "1000"
+        - name: ZOO_INIT_LIMIT
+          value: "10"
+        - name: ZOO_SYNC_LIMIT
+          value: "5"
+        - name: ZOO_MAX_CLIENT_CNXNS
+          value: "60"
+        - name: ZOO_4LW_COMMANDS_WHITELIST
+          value: "srvr, mntr, ruok"
+        - name: ZOO_LISTEN_ALLIPS_ENABLED
+          value: "no"
+        - name: ZOO_AUTOPURGE_INTERVAL
+          value: "0"
+        - name: ZOO_AUTOPURGE_RETAIN_COUNT
+          value: "3"
+        - name: ZOO_MAX_SESSION_TIMEOUT
+          value: "40000"
+        - name: ZOO_SERVERS
+          value: zookeeper-0.zookeeper-headless.default.svc.cluster.local:2888:3888
+            zookeeper-1.zookeeper-headless.default.svc.cluster.local:2888:3888 zookeeper-2.zookeeper-headless.default.svc.cluster.local:2888:3888
+        - name: ZOO_ENABLE_AUTH
+          value: "no"
+        - name: ZOO_HEAP_SIZE
+          value: "1024"
+        - name: ZOO_LOG_LEVEL
+          value: "ERROR"
+        - name: ALLOW_ANONYMOUS_LOGIN
+          value: "yes"
+        - name: POD_NAME
+          valueFrom:
+            fieldRef:
+              apiVersion: v1
+              fieldPath: metadata.name
+        resources:
+          requests:
+            cpu: 250m
+            memory: 256Mi
+        volumeMounts:
+        - name: data
+          mountPath: /bitnami/zookeeper
+        livenessProbe:
+          exec:
+            command: ['/bin/bash', '-c', 'echo "ruok" | timeout 2 nc -w 2 localhost
+                2181 | grep imok']
+          failureThreshold: 6
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          successThreshold: 1
+          timeoutSeconds: 5
+        readinessProbe:
+          exec:
+            command: ['/bin/bash', '-c', 'echo "ruok" | timeout 2 nc -w 2 localhost
+                2181 | grep imok']
+          failureThreshold: 6
+          initialDelaySeconds: 5
+          periodSeconds: 10
+          successThreshold: 1
+          timeoutSeconds: 5
+        imagePullPolicy: "IfNotPresent"
+        securityContext:
+          runAsUser: 1001
+      volumes:
+      securityContext:
+        fsGroup: 1001
+  volumeClaimTemplates:
+  - metadata:
+      name: data
+      annotations:
+    spec:
+      resources:
+        requests:
+          storage: "8Gi"
+      accessModes:
+      - "ReadWriteOnce"
+  serviceName: zookeeper-headless
+  podManagementPolicy: Parallel
+  updateStrategy:
+    type: RollingUpdate
